@@ -1,0 +1,42 @@
+#!/usr/bin/perl -w
+
+use strict 'vars';
+use strict 'subs';
+use Uniq;   # See http://search.cpan.org/~syamal/Uniq-0.01/Uniq.pm
+
+# Usage:  $0 < logs/catalina.out
+
+# define k-v pairs to substitute in the input grant list
+my %subhash=();
+$subhash{$ENV{"HOME"}}="\${user.home}";
+
+# Extract all rules from stdin 
+my @grantList= uniq sort grep(/^grant/,<STDIN>);
+
+# Extract all codeBase instances 
+my @codeBaseList;
+foreach my $j (@grantList) {
+   $j =~ m/"(.*?)"/;
+   push @codeBaseList, $1;
+}
+
+# Keep only unique codebase instances
+@codeBaseList = uniq sort @codeBaseList;
+
+# For each unique codebase, extract all rules containing it and print aggregated rules
+foreach my $k (@codeBaseList) {
+   my @tlist = uniq sort grep(/^grant codeBase \"$k/,@grantList);
+   foreach my $j (keys %subhash) {
+      $k =~ s/$j/$subhash{$j}/g;
+   }
+   print "grant codeBase \"$k\" {\n";
+   foreach my $n (@tlist) {
+      $n =~ m/\{(.*)\}/;
+      my $t = $1;
+      foreach my $j (keys %subhash) {
+         $t =~ s/$j/$subhash{$j}/g;
+      }
+      print "   $t\n";
+   }
+   print "};\n\n"
+}
