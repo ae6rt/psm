@@ -1,3 +1,15 @@
 See
 
 http://onjava.com/pub/a/onjava/2007/01/03/discovering-java-security-requirements.html
+
+Generally, you want to build the security manager with
+
+sh buildme.sh
+
+Then, run your application under it using something like
+
+java -Djava.security.manager=secmgr.manager.ProfilingSecurityManager -cp <path to security manager class>:<your app classpath> your.main.Class
+
+If your app generates a lot of grant statements, you can clean up and sort them by codebase using the parsecodebase Perl app:
+
+java -Djava.security.manager=secmgr.manager.ProfilingSecurityManager -cp <path to security manager class>:<your app classpath> your.main.Class | parsecodebase
